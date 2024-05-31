@@ -56,6 +56,15 @@
         }
         
         function request_all_mesechtos() {
+            var elements = document.getElementsByClassName("temporary");
+            
+            while (elements.length > 0) {
+                elements[0].parentNode.removeChild(elements[0]);
+            }
+            
+            totalofallmesechtos = 0
+            totalfoundinallmesechtos = 0
+
             for (let mesechta_number in mesechtos) {
                 fetchTalmudTitles(mesechtos[mesechta_number]);
             }
@@ -64,8 +73,11 @@
         async function fetchTalmudTitles(current_mesechta) {
             var number_of_times = 0;
             const currentTitle = document.createElement('p');
+            currentTitle.classList.add('temporary')
             const errorMessage = document.createElement('p');
+            errorMessage.classList.add('temporary')
             const numberoftimes = document.createElement('p');
+            numberoftimes.classList.add('temporary')
             const total_found = document.getElementById('total_found');
             const total_words = document.getElementById('total_words');
 
