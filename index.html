@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>count words in the gemara</title>
+    <style type="text/css">
+        .total_words {
+            position: fixed;
+            top: 100px;
+            left: calc(100% - 550px);
+            background-color: red;
+            width: 500px;
+            height: 20px;
+            padding: 5px;
+            color: white;
+        }
+        .total_found {
+            position: fixed;
+            top: 120px;
+            left: calc(100% - 550px);
+            background-color: red;
+            width: 500px;
+            height: 20px;
+            padding: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Words inside the talmud bavli</h1>
+    <input onkeyup="check_hebrew(this)" oninput="check_hebrew(this)" onkeypress="check_enter(event, this)" type="text" id="word" placeholder="enter a hebrew word:"/>
+    <p id="numberoftimes"></p>
+    <p id="current-title"></p>
+    <span id="total_words" class="total_words"></span>
+    <span id="total_found" class="total_found"></span>
+    <span id="error-message" style="color: red;"></span>
+
+    <script>
+        const mesechtos = ["Talmud Berakhot", "Talmud Shabbat", "Talmud Eruvin", "Talmud Pesachim", "Talmud Rosh Hashanah", "Talmud Yoma", "Talmud Sukkah", "Talmud Beitzah", "Talmud Taanit", "Talmud Megillah", "Talmud Moed Katan", "Talmud Chagigah", "Talmud Yevamot", "Talmud Ketubot", "Talmud Nedarim", "Talmud Nazir", "Talmud Sotah", "Talmud Gittin", "Talmud Kiddushin", "Talmud Bava Kamma", "Talmud Bava Metzia", "Talmud Bava Batra", "Talmud Sanhedrin", "Talmud Makkot", "Talmud Shevuot", "Talmud Avodah Zarah", "Talmud Horayot", "Talmud Zevachim", "Talmud Menachot", "Talmud Chullin", "Talmud Bekhorot", "Talmud Arakhin", "Talmud Temurah", "Talmud Keritot", "Talmud Meilah", "Talmud Tamid", "Talmud Niddah"]
+        var word_to_find = ""
+        var totalofallmesechtos = 0
+        var totalfoundinallmesechtos = 0
+    
+        function check_hebrew(e) {
+            const hebrewRegex = /[א-ת]/g;
+            e.value = e.value.replace(/[^א-ת]/g, '');
+        }
+
+        function check_enter(e, input) {
+            var code = (e.keyCode ? e.keyCode : e.which);
+            if (code == 13) { // Enter keycode
+                word_to_find = input.value
+                request_all_mesechtos()
+            }
+        }
+        
+        function request_all_mesechtos() {
+            for (let mesechta_number in mesechtos) {
+                fetchTalmudTitles(mesechtos[mesechta_number]);
+            }
+        }
+
+        async function fetchTalmudTitles(current_mesechta) {
+            var number_of_times = 0;
+            const currentTitle = document.createElement('p');
+            const errorMessage = document.createElement('p');
+            const numberoftimes = document.createElement('p');
+            const total_found = document.getElementById('total_found');
+            const total_words = document.getElementById('total_words');
+
+            var numberofwords = 0
+
+            numberoftimes.textContent = '';
+            errorMessage.textContent = '';
+
+            try {
+                const response = await fetch('https://www.sefaria.org/api/v3/texts/' + current_mesechta + '');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const texts = data.versions[0].text; // Adjust this based on the provided structure
+
+                if (Array.isArray(texts)) {
+                    let combinedText = ''; // Initialize an empty string to store all combined text
+
+                    texts.forEach(chapter => {
+                        if (Array.isArray(chapter) && chapter.length > 0) {
+                            chapter.forEach(text => {
+                                text = text.replace(/<[^>]+>/g, ''); // Remove HTML tags
+                                text = text.replace(/[~`?!@#$%^&*()+—–={}\[\];:׳'"״`<>.,\/\\\-_]/g, ''); // Remove punctuation
+                                combinedText += ' ' + text; // Append the cleaned text to the combinedText
+                            });
+                        }
+                    });
+
+                    // Remove occurrences of "הדרן עלך" and the next word
+                    combinedText = combinedText.replace(/הדרן עלך \S+/g, '');
+
+                    // Remove specific passage
+                    const specificPassage = "אָמַר רַבִּי אֶלְעָזָר אָמַר רַבִּי חֲנִינָא: תַּלְמִידֵי חֲכָמִים מַרְבִּים שָׁלוֹם בָּעוֹלָם, שֶׁנֶּאֱמַר : ״וְכׇל בָּנַיִךְ לִמּוּדֵי ה׳ וְרַב שְׁלוֹם בָּנָיִךְ״. אַל תִּקְרֵי ״בָּנַיִךְ״ אֶלָּא ״בּוֹנָיִךְ״. ״שָׁלוֹם רָב לְאֹהֲבֵי תוֹרָתֶךָ וְאֵין לָמוֹ מִכְשׁוֹל״. ״יְהִי שָׁלוֹם בְּחֵילֵךְ שַׁלְוָה בְּאַרְמְנוֹתָיִךְ״. ״לְמַעַן אַחַי וְרֵעָי אֲדַבְּרָה נָּא שָׁלוֹם בָּךְ. לְמַעַן בֵּית ה׳ אֱלֹהֵינוּ אֲבַקְשָׁה טוֹב לָךְ״. ״ה׳ עֹז לְעַמּוֹ יִתֵּן ה׳ יְבָרֵךְ אֶת עַמּוֹ בַשָּׁלוֹם";
+                    combinedText = combinedText.replace(specificPassage, '');
+                    combinedText = combinedText.replace("הדרן עלך", '');
+
+                    const words = combinedText.replace(/[\u0591-\u05C7]/g, "").replace("'", "").replace('"', "").split(' ').filter(word => word.length > 0); // Split the combined text into words
+
+                    words.forEach(word => {
+                        word = word.replace(/[\u0591-\u05C7]/g, ""); // Remove Hebrew vowel marks
+                        word = word.replace("'", "").replace('"', "");
+                        numberofwords += 1
+                        if (word === "מתני" || word === "גמ") {
+                            return; // Skip these words and continue to the next
+                        }
+                        if (word === word_to_find) {
+                            number_of_times += 1;
+                            numberoftimes.textContent = `times "${word_to_find}" is said in ${current_mesechta}: ${number_of_times}`;
+                        }
+                    });
+
+                    // Set the current title to show the total number of words
+                    currentTitle.textContent = `Total Words in ${current_mesechta} ≈ ${numberofwords}`;
+                    numberoftimes.textContent = `the word: "${word_to_find}" is said in ${current_mesechta} ≈ ${number_of_times} times`;
+                    
+                    totalfoundinallmesechtos += number_of_times
+                    totalofallmesechtos += numberofwords
+                    
+                    total_found.innerText = `about ${totalfoundinallmesechtos} times the word "${word_to_find}" comes up in the whole of ש״ס`
+                    total_words.innerText = `about ${totalofallmesechtos} words in the whole of ש״ס`
+                    
+                    document.body.appendChild(currentTitle);
+                    document.body.appendChild(errorMessage);
+                    document.body.appendChild(numberoftimes);
+                } else {
+                    errorMessage.textContent = 'Unexpected data format received from API.';
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                errorMessage.textContent = 'Failed to fetch titles. Please try again later.';
+            }
+        }
+    </script>
+</body>
+</html>
