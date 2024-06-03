@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -140,7 +142,7 @@
     </style>
 </head>
 <body>
-    <header><img src="sefaria.png" alt="" srcset=""></header>
+    <header><img src="sefaria.png#quizizz" alt="" srcset=""></header>
     <div class="container">
         <h1>Word Count in Talmud Bavli</h1>
         <input placeholder="Enter a Hebrew word" onkeyup="check_hebrew(this)" oninput="check_hebrew(this)" onkeypress="check_enter(event, this)" type="text" id="word">
@@ -164,17 +166,41 @@
         var word_to_find = ""
         var totalofallmesechtos = 0
         var totalfoundinallmesechtos = 0
+        var clear_vowels = false
     
         function check_hebrew(e) {
-            const hebrewRegex = /[א-ת]/g;
-            e.value = e.value.replace(/[^א-ת]/g, '');
+            const hebrewRegex = /[אבבּגדהוזחטיכךכּלמםנןסעפףפּצץקרששׁשׂתוּוְֱֲֳִֵֶַָׇֹֹֻּֽ]/g;
+            e.value = e.value.replace(/[^אבבּגדהוזחטיכךכּלמםנןסעפףפּצץקרששׁשׂתוּוְֱֲֳִֵֶַָׇֹֹֻּֽ]/g, '');
         }
 
         function check_enter(e, input) {
             var code = (e.keyCode ? e.keyCode : e.which);
-            if (code == 13) { // Enter keycode
+            if (code == 13) {
                 word_to_find = input.value
-                request_all_mesechtos()
+                    
+                
+                isVowelSensitive = document.getElementById("vowelSensitive").checked
+
+
+                if (input.value != word_to_find.replace(/[\u0591-\u05C7]/g, "")) { //if contains vowels
+                    if (isVowelSensitive == false) { //if checkbox not checked
+                        clear_vowels = true
+                        alert("automatically clearing vowels from your input")
+                        word_to_find = word_to_find.replace(/[\u0591-\u05C7]/g, "")
+                        input.value = word_to_find.replace(/[\u0591-\u05C7]/g, "")
+                        request_all_mesechtos()
+                    } else { //checkbox IS checked
+                        clear_vowels = false
+                        request_all_mesechtos()
+                    }
+                } else { //if doesnt contain vowels
+                    if (isVowelSensitive == true) { //if checkbox is checked
+                        alert("your input does not contain any vowels, uncheck the vowel sensitive box")
+                    } else { //checkbox isnt checked
+                        clear_vowels = true
+                        request_all_mesechtos()
+                    }
+                }
             }
         }
         
@@ -202,7 +228,7 @@
             var numberofwords = 0
 
             try {
-                const response = await fetch('https://www.sefaria.org/api/v3/texts/' + current_mesechta + '');
+                const response = await fetch('https://www.sefaria.org/api/v3/texts/' + current_mesechta + '#quizizz');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -231,14 +257,16 @@
                     combinedText = combinedText.replace(specificPassage, '');
                     combinedText = combinedText.replace("הדרן עלך", '');
 
-                    const words = combinedText.replace(/[\u0591-\u05C7]/g, "").replace("'", "").replace('"', "").split(' ').filter(word => word.length > 0); // Split the combined text into words
+                    const words = combinedText.replace("'", "").replace('"', "").split(' ').filter(word => word.length > 0); // Split the combined text into words
 
                     words.forEach(word => {
-                        word = word.replace(/[\u0591-\u05C7]/g, ""); // Remove Hebrew vowel marks
+                        if (clear_vowels == true) {
+                            word = word.replace(/[\u0591-\u05C7]/g, ""); // Remove Hebrew vowel marks
+                        }
                         word = word.replace("'", "").replace('"', "");
                         numberofwords += 1
                         if (word === "מתני" || word === "גמ") {
-                            return; // Skip these words and continue to the next
+                            return;
                         }
                         if (word === word_to_find) {
                             number_of_times += 1;
