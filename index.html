@@ -257,6 +257,9 @@
                     combinedText = combinedText.replace(specificPassage, '');
                     combinedText = combinedText.replace("הדרן עלך", '');
 
+                    combinedText = combinedText.replace(/hi1.*?hi2/, ' ');
+                    
+
                     const words = combinedText.replace("'", "").replace('"', "").split(' ').filter(word => word.length > 0); // Split the combined text into words
 
                     words.forEach(word => {
